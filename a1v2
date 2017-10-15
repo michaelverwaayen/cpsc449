@@ -1,0 +1,55 @@
+--
+--  Return the tag for a square in the middle of a region
+--
+width :: Int
+width = 1024
+
+height :: Int
+height = 768
+square :: Int -> Int -> Int -> Int -> String
+square x y w h =
+  "<rect x=" ++ (show (x + div w 2)) ++
+  " y=" ++ (show (y + div h 2)) ++
+  " width=" ++ (show (div w 2)) ++
+  " height=" ++ (show (div h 2)) ++
+  " fill=\"rgb(" ++ show (x * 255 `div` 512) ++ ","
+                 ++ show (255 - ((x + y) * 255 `div` 1024)) ++ ","
+                 ++ show (y * 255 `div` 512) ++ ")\" "
+                 ++ "stroke=\"black\"/>\n"
+
+--  qtree: Identify the tags needed to draw the fractal quad tree
+--  Parameters:
+--    x, y: The top left corner of the current region
+--    w, h: The width and height of the region
+--  Return:
+--    A string containing tags that can be rendered within an HTML doc
+qtree :: Int -> Int -> Int -> Int -> String
+qtree x y w h
+	| w > width `div` 2 && h > height `div` 2  = -- draw a square in the middle of the region
+                       (square x y w h) ++
+                       -- call recursively 4 times
+                       -- (qtree (x + div new_w 2) (y + div new_h 2) new_w new_h) ++ -- discarded the top-left quad to draw beautiful fractal
+                       (qtree (x + div new_w 2) (y + new_h) new_w new_h) ++
+                       (qtree (x + new_w) (y + div new_h 2) new_w new_h) ++
+                       (qtree (x + new_w) (y + new_h) new_w new_h)
+	| w > width `div` 2 =
+                       (square x y w h) ++
+                       -- call recursively 4 times
+                       -- (qtree (x + div new_w 2) (y + div new_h 2) new_w new_h) ++ -- discarded the top-left quad to draw beautiful fractal
+                       (qtree (x + div new_w 2) (y + new_h) new_w new_h) ++
+                       (qtree (x ) (y) new_w new_h) ++
+                       (qtree (x + new_w) (y + new_h) new_w new_h)
+					   
+	| otherwise        = square x y w h
+  where 
+    new_w = w `div` 2
+    new_h = h `div` 2
+	
+
+main :: IO ()
+main = do
+  let prefix = "<html><svg width=\"1024\" height=\"1024\">\n"
+  let suffix = "\n</svg></html>"
+  let image_tags = qtree 0 0 width height
+
+  writeFile "qtree.html" (prefix ++ image_tags ++ suffix)
