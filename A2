@@ -1,4 +1,4 @@
-
+--
 -- CPSC 449 Assignment 2 Starter Code
 --
 import qualified Data.ByteString.Lazy as BS
@@ -102,13 +102,13 @@ decodeImage bytes
 --
 -- Insert your code here for Parts 2, 3 and 4 here
 --
-makeTree :: [(Int,Int,Int)] -> WidthQuadTree
+makeTree :: [[(Int,Int,Int)]] -> WidthQuadTree
 makeTree (x:xs) = Representation width (createTree(x:xs))
 	where 
 	width = length x 
 	
 
-createTree :: [(Int,Int,Int)] -> QuadTree
+createTree :: [[(Int,Int,Int)]] -> QuadTree
 createTree [] = error " This list is empty..."
 createTree(x:xs)
 	| length x == 1  = Leaf(x !! 0)
@@ -124,7 +124,7 @@ colorTest [] = True
 --colorTest (x:y:z) = (x /= y) || (y /= z) || (x /= z) = False 
 
 
-squareMaker :: [(Int,Int,Int)] -> Int -> Int -> Int -> Int -> [(Int,Int,Int)]
+squareMaker :: [[(Int,Int,Int)]] -> Int -> Int -> Int -> Int -> [(Int,Int,Int)]
 squareMaker tree a b c d
 	| c < d = (squareHelper (tree !! y1) x1 x2) : (squareMaker tree a b (c+1) d)
 	| otherwise = []
