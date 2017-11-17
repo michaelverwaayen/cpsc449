@@ -13,10 +13,10 @@ import Numeric (showHex)
 --
 -- data ...
 -- data ...
-data QuadTree = Leaf(Int,Int,Int) | Node QuadTree QuadTree QuadTree QuadTree deriving(Show,Read,Eq)
+data QuadTree = Leaf (Int,Int,Int) | Node QuadTree QuadTree QuadTree QuadTree deriving(Show,Eq) 
 
 
-data WidthQuadTree = Representation Int QuadTree deriving(Show,Read,Eq)
+data WidthQuadTree = Representation Int QuadTree deriving(Show,Eq)
 --
 -- The following functions are a simple PNG file loader.  Note that these
 -- functions will not load all PNG files.  They makes some assumptions about
@@ -102,31 +102,43 @@ decodeImage bytes
 --
 -- Insert your code here for Parts 2, 3 and 4 here
 --
-makeTree :: [[(Int,Int,Int)]] -> WidthQuadTree
-makeTree (x:xs) = Representation width (createTree(x:xs))
+createTree :: [[(Int, Int, Int)]] -> WidthQuadTree
+createTree (x:xs) = Representation width (makeTree(x:xs))
 	where 
 	width = length x 
 	
 
-createTree :: [[(Int,Int,Int)]] -> QuadTree
-createTree [] = error " This list is empty..."
-createTree(x:xs)
+makeTree:: [[(Int,Int,Int)]] -> QuadTree
+makeTree [] = error " This list is empty..."
+makeTree(x:xs)
 	| length x == 1  = Leaf(x !! 0)
-	|colorTest(x:xs) = Leaf(x !! 0)
-	|otherwise = Node (makeTree(squareMaker(x:xs) ((length x) `div` 2) (length x) 0 ((length x) `div` 2))) 
-		++ (makeTree(squareMaker(x:xs) 0 ((length x) `div` 2)  0 ((length x) `div` 2))) 
-		++ (makeTree(squareMaker(x:xs)  0 ((length x) `div` 2)  ((length x) `div` 2) (length x))) 
-		++ (makeTree(squareMaker(x:xs) ((length x) `div` 2) (length x) ((length x) `div` 2) (length x))) 
+	| colorTest(x:xs) = Leaf(x !! 0)
+	| otherwise = (Node (makeTree(init(squareMaker (x:xs) ((length x) `div` 2) (length x) 0 ((length x) `div` 2))))
+					(makeTree(init(squareMaker (x:xs) 0 ((length x) `div` 2) 0 ((length x) `div` 2))))
+					(makeTree(init(squareMaker (x:xs) 0 ((length x) `div` 2) ((length x) `div` 2) (length x)))) 
+					(makeTree(init(squareMaker (x:xs) ((length x) `div` 2) (length x) ((length x) `div` 2) (length x)))) )
 
-colorTest :: [(Int,Int,Int)] -> Bool
-colorTest (x:y:z) = (x == y) && (y == z) && (x == z)  
+
+colorTest :: [[(Int,Int,Int)]] -> Bool
+colorTest (x:y:z) = (x == y) && colorTest (y:z) && colorTest2(x)
+colorTest (x:z) = True 
 colorTest [] = True 
+
+--compare to next element 
+colorTest2 :: [(Int,Int,Int)] -> Bool 
+colorTest2[] = True 
+colorTest2(x:_) = True 
+colorTest2 (x:xs) = (x == (xs !! 0)) && colorTest2 xs 
+colorTest2(x:z) = False 
+
+
+
 --colorTest (x:y:z) = (x /= y) || (y /= z) || (x /= z) = False 
 
 
-squareMaker :: [[(Int,Int,Int)]] -> Int -> Int -> Int -> Int -> [(Int,Int,Int)]
+squareMaker :: [[(Int,Int,Int)]] -> Int -> Int -> Int -> Int -> [[(Int,Int,Int)]]
 squareMaker tree a b c d
-	| c < d = (squareHelper (tree !! y1) x1 x2) : (squareMaker tree a b (c+1) d)
+	| c < d = (squareHelper (tree !! c) a b) : (squareMaker tree a b (c+1) d)
 	| otherwise = []
 
 squareHelper :: [(Int,Int,Int)] -> Int -> Int -> [(Int,Int,Int)]
@@ -135,6 +147,25 @@ squareHelper tree a b
 	|otherwise = [] 
 	
 --PART 3
+treeMap ::(QuadTree -> QuadTree) ->QuadTree -> QuadTree
+treeMap f (Leaf x)  = f(Leaf x)
+treeMap f (Node q1 q2 q3 q4) = Node ( treeMap f q1) (treeMap f q2) (treeMap f q3) (treeMap f q4) 
+
+grayScaleHelper :: QuadTree -> QuadTree 
+grayScaleHelper (Leaf(r,g,b)) = (Leaf(((r + g + b) `div` 3), ((r + g + b) `div` 3),((r + g + b) `div` 3)))
+
+grayScale :: QuadTree -> QuadTree 
+grayScale x =  (treeMap grayScaleHelper x)
+					
+
+mirror :: WidthQuadTree -> WidthQuadTree
+mirror (w ,(Leaf x)) = WidthQuadTree((w (Leaf(x))))
+mirror (w , (Node q1 q2 q3 q4)) = mirrorHelper(QuadTree)
+
+
+-- q1=q4 q2=q3 q4=q1 q3=q2
+mirrorHelper :: QuadTree -> QuadTree					
+mirrorHelper (Node q1 q2 q3 q4) =  Node (q4) (q3) (q2) (q1) 				
 
 
 
@@ -144,13 +175,13 @@ toHTML (Representation wh tree) = toHTMLHelper 0 0 wh tree
 
 toHTMLHelper :: Int -> Int -> Int -> QuadTree -> String 
 toHTMLHelper x y width (Leaf(r,g,b)) = drawSquare x y  width r g b
-toHTMLHelper x y width  (Node q1 q2 q3 q4) = (toHTMLHelper (x + (width `div` 2) ) y (width `div` 2) q1) 
+toHTMLHelper x y width  (Node q1 q2 q3 q4) = ((toHTMLHelper (x + (width `div` 2) ) y (width `div` 2) q1) 
 											++ (toHTMLHelper x y (width `div` 2) q2 ) 
 											++ (toHTMLHelper x (y + (width `div` 2) ) (width `div` 2) q3 ) 
-											++ (toHTMLHelper (x + (width `div` 2) ) (y + (width `div` 2) ) (width `div` 2) q4 )
+											++ (toHTMLHelper (x + (width `div` 2) ) (y + (width `div` 2) ) (width `div` 2) q4 ))
 	
 	
-drawSquare :: Int -> Int -> Int -> Int -> Int -> Int -> Int 
+drawSquare :: Int -> Int -> Int -> Int -> Int -> Int -> String 
 drawSquare x y w r g b = 
 	"<rect x=" ++ (show x) ++ 
        " y=" ++ (show y) ++ 
@@ -159,7 +190,7 @@ drawSquare x y w r g b =
        " stroke=\"None\"" ++
        " fill=\"rgb(" ++ (show (r)) ++ "," ++
                          (show (g)) ++ "," ++
-                         (show (b)) ++ ")\" />\n")	
+                         (show (b)) ++ ")\" />\n"	
 --
 -- Load a PNG file, convert it to a quad tree, mirror it, grayscale it,
 -- and write all three images to an .html file.
@@ -167,16 +198,16 @@ drawSquare x y w r g b =
 main :: IO ()
 main = do
   -- Change the name inside double quotes to load a different file
-  input <- BS.readFile "Mondrian.png"
+  input <- BS.readFile "Test_512x512.png"
  
   -- image is the list representation of the image stored in the .png file
   let image = decodeImage input
 
   -- Convert the list representation of the image into a tree representation
-  --let qtree_image = createTree image
+  let qtree_image = createTree image
 
   -- Gray scale the tree representation of the image
-  --let gs = grayscale qtree_image
+  let gs = grayScale qtree_image
 
   -- Mirror the tree representation of the image
   --let mi = mirror qtree_image
