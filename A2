@@ -1,6 +1,7 @@
 --
 -- CPSC 449 Assignment 2 Starter Code
 --
+import Debug.Trace 
 import qualified Data.ByteString.Lazy as BS
 import Data.Word
 import Data.Bits
@@ -119,18 +120,29 @@ makeTree(x:xs)
 					(makeTree(init(squareMaker (x:xs) ((length x) `div` 2) (length x) ((length x) `div` 2) (length x)))) )
 
 
+					
+					
+					
+					
+					
+					
+					
+
 colorTest :: [[(Int,Int,Int)]] -> Bool
 colorTest (x:y:z) = (x == y) && colorTest (y:z) && colorTest2(x)
-colorTest (x:z) = True 
-colorTest [] = True 
+colorTest (x:z) =colorTest2(x) && colorTest3(x)
+colorTest (x) = True 
+colorTest [] = True  
 
 --compare to next element 
-colorTest2 :: [(Int,Int,Int)] -> Bool 
-colorTest2[] = True 
-colorTest2(x:_) = True 
-colorTest2 (x:xs) = (x == (xs !! 0)) && colorTest2 xs 
-colorTest2(x:z) = False 
+colorTest2 :: [(Int,Int,Int)] -> Bool
+coorTest2 [] = []
+colorTest2(x) = True  
+colorTest2 (x:xs) = (x == (xs !! 0)) &&colorTest2 xs
 
+
+colorTest3 :: [(Int,Int,Int)] -> Bool
+colorTest3 (x:xs) = x == last xs
 
 
 --colorTest (x:y:z) = (x /= y) || (y /= z) || (x /= z) = False 
@@ -158,14 +170,14 @@ grayScale :: QuadTree -> QuadTree
 grayScale x =  (treeMap grayScaleHelper x)
 					
 
-mirror :: WidthQuadTree -> WidthQuadTree
-mirror (w ,(Leaf x)) = WidthQuadTree((w (Leaf(x))))
-mirror (w , (Node q1 q2 q3 q4)) = mirrorHelper(QuadTree)
+--mirror :: WidthQuadTree -> WidthQuadTree
+--mirror (w ,(Leaf x)) = WidthQuadTree((w (Leaf(x))))
+--mirror (w , (Node q1 q2 q3 q4)) = mirrorHelper(QuadTree)
 
 
 -- q1=q4 q2=q3 q4=q1 q3=q2
-mirrorHelper :: QuadTree -> QuadTree					
-mirrorHelper (Node q1 q2 q3 q4) =  Node (q4) (q3) (q2) (q1) 				
+--mirrorHelper :: QuadTree -> QuadTree					
+--mirrorHelper (Node q1 q2 q3 q4) =  Node (q4) (q3) (q2) (q1) 				
 
 
 
@@ -207,7 +219,7 @@ main = do
   let qtree_image = createTree image
 
   -- Gray scale the tree representation of the image
-  let gs = grayScale qtree_image
+--  let gs = grayScale qtree_image
 
   -- Mirror the tree representation of the image
   --let mi = mirror qtree_image
